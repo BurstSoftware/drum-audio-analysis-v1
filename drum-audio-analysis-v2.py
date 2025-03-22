@@ -48,8 +48,8 @@ def analyze_audio_attributes(audio_data, sr):
         'beat_times': beat_times,
         'zero_crossing_rate': zcr,
         'spectral_flatness': spec_flatness,
-        'freqs': freqs,  # For plotting
-        'mag_spectrum': mag_spectrum  # For plotting
+        'freqs': freqs,
+        'mag_spectrum': mag_spectrum
     }
 
 def plot_analysis(audio_data, sr, analysis_results, min_freq, max_freq):
@@ -195,16 +195,34 @@ def main():
                         mime="text/plain"
                     )
                     
-                    # CSV Export
-                    df = pd.DataFrame({
-                        'Time (s)': librosa.times_like(audio_data, sr=sr),
-                        'Amplitude': np.abs(audio_data),
-                        'RMS': librosa.feature.rms(y=audio_data)[0]
+                    # CSV Export - Separate DataFrames for sample-based and frame-based data
+                    # Sample-based data (Time and Amplitude)
+                    time_samples = librosa.times_like(audio_data, sr=sr)
+                    df_samples = pd.DataFrame({
+                        'Time (s)': time_samples,
+                        'Amplitude': np.abs(audio_data)
                     })
+                    
+                    # Frame-based data (RMS)
+                    rms = librosa.feature.rms(y=audio_data)[0]
+                    time_frames = librosa.times_like(rms, sr=sr)
+                    df_rms = pd.DataFrame({
+                        'Time (s)': time_frames,
+                        'RMS': rms
+                    })
+                    
+                    # Provide two separate CSV downloads
                     st.download_button(
-                        label="Download Raw Data (CSV)",
-                        data=df.to_csv(index=False),
-                        file_name="audio_data.csv",
+                        label="Download Sample Data (CSV)",
+                        data=df_samples.to_csv(index=False),
+                        file_name="audio_sample_data.csv",
+                        mime="text/csv"
+                    )
+                    
+                    st.download_button(
+                        label="Download RMS Data (CSV)",
+                        data=df_rms.to_csv(index=False),
+                        file_name="audio_rms_data.csv",
                         mime="text/csv"
                     )
                     
